@@ -36,14 +36,12 @@ class Rlp {
   }
 
   static List<int> encode(dynamic input) {
-
     if (input is List) {
       List<int> output = input.fold([], (accum, i) {
         return accum..addAll(encode(i));
       });
       return encodeLength(output.length, 0xc0)..addAll(output);
     } else {
-
       return maybeEncodeLength(input is Address
           ? input.toList()
           : input is String
