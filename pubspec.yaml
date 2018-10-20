@@ -1,6 +1,6 @@
 name: rlp
 description: An Ethereum RLP (Recursive Length Prefix) encoding library for Dart.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/maxholman/rlp
 author: Max Holman <max@holmn.com>
 
