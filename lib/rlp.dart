@@ -1,3 +1,3 @@
 library rlp;
 
-export 'src/rlp_base.dart';
+export 'src/rlp.dart';
