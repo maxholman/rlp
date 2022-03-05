@@ -2,7 +2,7 @@
 
 An Ethereum RLP library for Dart - https://pub.dartlang.org/packages/rlp
 
-[![Build Status](https://travis-ci.org/maxholman/rlp.svg?branch=master)](https://travis-ci.org/maxholman/rlp)
+[![Build Status](https://github.com/maxholman/rlp/actions/workflows/dart.yml/badge.svg)](https://github.com/maxholman/rlp/actions/workflows/dart.yml)
 
 > The purpose of RLP (Recursive Length Prefix) is to encode arbitrarily nested arrays of binary data, and RLP is the main encoding method used to serialize objects in Ethereum
 
