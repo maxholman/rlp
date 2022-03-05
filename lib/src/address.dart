@@ -4,7 +4,6 @@ import 'package:convert/convert.dart';
 
 /// Ethereum Address
 class Address {
-
   /// Internal string representation of the address (with leading 0x)
   String _address;
 
@@ -13,7 +12,8 @@ class Address {
 
   /// Encode the address as a 20 byte Uint8List
   Uint8List toBytes() {
-    return Uint8List.fromList(hex.decode(_address.substring(2)))..sublist(0, 20);
+    return Uint8List.fromList(hex.decode(_address.substring(2)))
+      ..sublist(0, 20);
   }
 
   String toString() {

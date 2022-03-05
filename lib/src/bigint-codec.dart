@@ -4,13 +4,13 @@
 
 import "dart:typed_data";
 
-var _byteMask = new BigInt.from(0xff);
+var _byteMask = BigInt.from(0xff);
 
 /// Decode a BigInt from bytes in big-endian encoding.
 BigInt decodeBigInt(Uint8List bytes) {
-  BigInt result = new BigInt.from(0);
+  BigInt result = BigInt.from(0);
   for (int i = 0; i < bytes.length; i++) {
-    result += new BigInt.from(bytes[bytes.length - i - 1]) << (8 * i);
+    result += BigInt.from(bytes[bytes.length - i - 1]) << (8 * i);
   }
   return result;
 }
@@ -19,7 +19,7 @@ BigInt decodeBigInt(Uint8List bytes) {
 Uint8List encodeBigInt(BigInt number) {
   // Not handling negative numbers. Decide how you want to do that.
   int size = (number.bitLength + 7) >> 3;
-  var result = new Uint8List(size);
+  var result = Uint8List(size);
   for (int i = 0; i < size; i++) {
     result[size - i - 1] = (number & _byteMask).toInt();
     number = number >> 8;

@@ -576,8 +576,8 @@ void main() {
   });
 
   test('Tether USDT contract address from nonce and sender', () {
-    var encoded = Rlp.encode(
-        [Address('0x36928500bc1dcd7af6a2b4008875cc336b927d57'), 6]);
+    var encoded =
+        Rlp.encode([Address('0x36928500bc1dcd7af6a2b4008875cc336b927d57'), 6]);
     var out = KeccakDigest(256).process(Uint8List.fromList(encoded));
     expect(hex.encode(out.sublist(12)),
         equals('dac17f958d2ee523a2206206994597c13d831ec7'));

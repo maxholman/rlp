@@ -7,7 +7,6 @@ import 'address.dart';
 
 /// RLP Recursive Length Prefix (Encoder only)
 class Rlp {
-
   static Uint8List _maybeEncodeLength(Uint8List input) {
     if (input.length == 1 && input.first < 0x80) {
       return input;
