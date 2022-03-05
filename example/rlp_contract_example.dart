@@ -5,8 +5,8 @@ import 'package:rlp/rlp.dart';
 import 'package:rlp/src/address.dart';
 
 main() {
-  var sender = Address('0xba52c75764d6f594735dc735be7f1830cdf58ddf');
-  var nonce = 3515;
+  var sender = Address('0x36928500bc1dcd7af6a2b4008875cc336b927d57');
+  var nonce = 6;
 
   var encoded = Rlp.encode([sender, nonce]);
 
@@ -14,5 +14,5 @@ main() {
   var contractAddress = hex.encode(out.sublist(12));
 
   print(
-      'Cryptokitties contract address is 0x$contractAddress'); // 0x06012c8cf97bead5deae237070f9587f8e7a266d
+      'Tether USDT contract address is 0x$contractAddress'); // 0xdac17f958d2ee523a2206206994597c13d831ec7
 }

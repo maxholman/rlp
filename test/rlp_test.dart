@@ -575,12 +575,11 @@ void main() {
         equals('52d1b00ecb88d6aebc15d21559b368e818df388c'));
   });
 
-  test('Cryptokitties contract address from nonce and sender', () {
+  test('Tether USDT contract address from nonce and sender', () {
     var encoded = Rlp.encode(
-        [Address('0xba52c75764d6f594735dc735be7f1830cdf58ddf'), 3515]);
+        [Address('0x36928500bc1dcd7af6a2b4008875cc336b927d57'), 6]);
     var out = KeccakDigest(256).process(Uint8List.fromList(encoded));
-    print(hex.encode(out.sublist(12)));
     expect(hex.encode(out.sublist(12)),
-        equals('06012c8cf97bead5deae237070f9587f8e7a266d'));
+        equals('dac17f958d2ee523a2206206994597c13d831ec7'));
   });
 }
