@@ -1,75 +1,128 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-import 'package:rlp/src/bigint-codec.dart';
+import 'package:rlp/src/byte_sink.dart';
 import 'package:rlp/src/utils.dart';
 
 import 'address.dart';
 
 /// RLP Recursive Length Prefix (Encoder only)
 class Rlp {
-  static Uint8List _maybeEncodeLength(Uint8List input) {
-    if (input.length == 1 && input.first < 0x80) {
-      return input;
-    } else {
-      return mergeAsUint8List(_encodeLength(input.length, 0x80), input);
-    }
+  /// Performs RLP encoding
+  static Uint8List encode(dynamic value) {
+    final byteSink = TransactionByteSink();
+    _encodeToBuffer(value, byteSink);
+    return byteSink.asBytes();
   }
 
-  static Uint8List _encodeNonListType(dynamic input) {
-    if (input is Uint8List) return input;
-    if (input is List<int>) return Uint8List.fromList(input);
-    if (input is Address) {
-      return input.toBytes();
-    }
-
-    if (input is String) {
-      if (isHexString(input)) {
-        return Uint8List.fromList(hex.decode(padToEven(stripHexPrefix(input))));
+  static void _encodeToBuffer(dynamic value, TransactionByteSink builder) {
+    if (value is List) {
+      _encodeList(value, builder);
+    } else if (value is String) {
+      if (isHexString(value)) {
+        _encodeString(
+          Uint8List.fromList(hex.decode(padToEven(stripHexPrefix(value)))),
+          builder,
+        );
+      } else {
+        _encodeString(
+          Uint8List.fromList(utf8.encode(value)),
+          builder,
+        );
       }
-      return decodeString(input);
-    }
-
-    if (input is int) {
-      return encodeInt(input);
-    }
-
-    if (input is BigInt) {
-      return encodeBigInt(input);
-    }
-
-    throw ('Invalid Input Type');
-  }
-
-  static Uint8List _encodeLength(int len, int offset) {
-    if (len < 56) {
-      return Uint8List.fromList([len + offset]);
+    } else if (value is int) {
+      _encodeInt(BigInt.from(value), builder);
+    } else if (value is BigInt) {
+      _encodeInt(value, builder);
+    } else if (value is Address) {
+      return _encodeString(
+        Uint8List.fromList(hex.decode(
+          padToEven(stripHexPrefix(value.toString())),
+        )),
+        builder,
+      );
     } else {
-      var binary = _toBinary(len);
-      return mergeAsUint8List([binary.length + offset + 55], binary);
+      throw Exception('Type not supported for RLP encoding');
     }
   }
 
-  static Uint8List _toBinary(int x) {
-    if (x == 0) {
-      return Uint8List(0);
+  static _encodeInt(BigInt value, TransactionByteSink builder) {
+    if (value == BigInt.zero) {
+      _encodeString(Uint8List(0), builder);
     } else {
-      return mergeAsUint8List(_toBinary(x ~/ 256), [x % 256]);
+      _encodeString(_unsignedIntToBytes(value), builder);
     }
   }
 
-  /// Encodes the input as a Uint8List
-  static Uint8List encode(dynamic input) {
-    if (input is List) {
-      var output = BytesBuilder();
-      input.forEach((i) {
-        return output.add(encode(i));
-      });
-      return mergeAsUint8List(
-          _encodeLength(output.length, 0xc0), output.toBytes());
+  static _encodeList(List list, TransactionByteSink builder) {
+    final subBuilder = TransactionByteSink();
+    for (final item in list) {
+      _encodeToBuffer(item, subBuilder);
     }
 
-    return Rlp._maybeEncodeLength(Rlp._encodeNonListType(input));
+    final length = subBuilder.length;
+    if (length <= 55) {
+      builder
+        ..addByte(0xc0 + length)
+        ..add(subBuilder.asBytes());
+      return;
+    } else {
+      final encodedLength = _unsignedIntToBytes(BigInt.from(length));
+
+      builder
+        ..addByte(0xf7 + encodedLength.length)
+        ..add(encodedLength)
+        ..add(subBuilder.asBytes());
+      return;
+    }
+  }
+
+  static _encodeString(Uint8List string, TransactionByteSink builder) {
+    // For a single byte in [0x00, 0x7f], that byte is its own RLP encoding
+    if (string.length == 1 && string[0] <= 0x7f) {
+      builder.addByte(string[0]);
+      return;
+    }
+
+    // If a string is between 0 and 55 bytes long, its encoding is 0x80 plus
+    // its length, followed by the actual string
+    if (string.length <= 55) {
+      builder
+        ..addByte(0x80 + string.length)
+        ..add(string);
+      return;
+    }
+
+    // More than 55 bytes long, RLP is (0xb7 + length of encoded length), followed
+    // by the length, followed by the actual string
+    final length = string.length;
+    final encodedLength = _unsignedIntToBytes(BigInt.from(length));
+
+    builder
+      ..addByte(0xb7 + encodedLength.length)
+      ..add(encodedLength)
+      ..add(string);
+  }
+
+  static Uint8List _unsignedIntToBytes(BigInt number) {
+    assert(!number.isNegative);
+    return _encodeBigIntAsUnsigned(number);
+  }
+
+  /// Encode as Big Endian unsigned byte array.
+  static Uint8List _encodeBigIntAsUnsigned(BigInt number) {
+    var _byteMask = BigInt.from(0xff);
+    if (number == BigInt.zero) {
+      return Uint8List.fromList([0]);
+    }
+    var size = number.bitLength + (number.isNegative ? 8 : 7) >> 3;
+    var result = Uint8List(size);
+    for (var i = 0; i < size; i++) {
+      result[size - i - 1] = (number & _byteMask).toInt();
+      number = number >> 8;
+    }
+    return result;
   }
 
   /// Decodes the Uint8List
@@ -78,8 +131,7 @@ class Rlp {
       return <dynamic>[];
     }
 
-    Uint8List inputBuffer = _encodeNonListType(input);
-    Decoded decoded = _decode(inputBuffer);
+    Decoded decoded = _decode(input);
 
     if (decoded.remainder.length != 0) {
       throw FormatException('invalid remainder');
