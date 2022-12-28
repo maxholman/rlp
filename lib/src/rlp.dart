@@ -17,12 +17,17 @@ class Rlp {
   }
 
   static Uint8List _encodeNonListType(dynamic input) {
+    if (input is Uint8List) return input;
+    if (input is List<int>) return Uint8List.fromList(input);
     if (input is Address) {
       return input.toBytes();
     }
 
     if (input is String) {
-      return Uint8List.fromList(input.codeUnits);
+      if (isHexString(input)) {
+        return Uint8List.fromList(hex.decode(padToEven(stripHexPrefix(input))));
+      }
+      return decodeString(input);
     }
 
     if (input is int) {

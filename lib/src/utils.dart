@@ -16,6 +16,11 @@ Uint8List mergeAsUint8List(List<int> a, List<int> b) {
   return output.toBytes();
 }
 
+/// Decodes the given [String] to [Uint8List]
+Uint8List decodeString(String string) {
+  return Uint8List.fromList(string.codeUnits);
+}
+
 /// Safely parses the String to int
 int safeParseInt(String v, [int? base]) {
   if (v.startsWith('00')) {
@@ -23,6 +28,42 @@ int safeParseInt(String v, [int? base]) {
   }
 
   return int.parse(v, radix: base);
+}
+
+/// Checks whether the give string is hex or not
+bool isHexString(String value, {int length = 0}) {
+  if (!RegExp('^0x[0-9A-Fa-f]*\$').hasMatch(value)) {
+    return false;
+  }
+
+  if (length > 0 && value.length != 2 + 2 * length) {
+    return false;
+  }
+
+  return true;
+}
+
+/// Strips the hex prefix from given string. 
+/// 
+/// 0x40 -> 40
+String stripHexPrefix(String str) {
+  return isHexPrefixed(str) ? str.substring(2) : str;
+}
+
+/// Checks whether the given string has hex prefix('0x') or not.
+bool isHexPrefixed(String str) {
+  return str.substring(0, 2) == '0x';
+}
+
+/// Pads a [String] to have an even length
+String padToEven(String value) {
+  var a = value;
+
+  if (a.length % 2 == 1) {
+    a = "0$a";
+  }
+
+  return a;
 }
 
 /// Encode an int into bytes

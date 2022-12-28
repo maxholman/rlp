@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:pointycastle/digests/keccak.dart';
+import 'package:rlp/src/utils.dart';
 import 'package:test/test.dart';
 
 import 'package:rlp/rlp.dart';
@@ -581,5 +582,43 @@ void main() {
     var out = KeccakDigest(256).process(Uint8List.fromList(encoded));
     expect(hex.encode(out.sublist(12)),
         equals('dac17f958d2ee523a2206206994597c13d831ec7'));
+  });
+
+  test("first byte < 0x7f, return byte itself", () {
+    final decodedStr = Rlp.decode(Uint8List.fromList([97]));
+    expect(1, decodedStr.length);
+    expect("a", ascii.decode(decodedStr.cast()));
+  });
+
+  test('first byte < 0xb7, data is everything except first byte', () {
+    final decodedStr = Rlp.decode(Uint8List.fromList([131, 100, 111, 103]));
+    expect(3, decodedStr.length);
+    expect(ascii.decode(decodedStr.cast()), 'dog');
+  });
+
+  test("decode list", () {
+    final decodedBufferArray = Rlp.decode(
+      Uint8List.fromList([
+        204,
+        131,
+        100,
+        111,
+        103,
+        131,
+        103,
+        111,
+        100,
+        131,
+        99,
+        97,
+        116,
+      ]),
+    );
+
+    expect(decodedBufferArray, [
+      decodeString('dog'),
+      decodeString('god'),
+      decodeString('cat'),
+    ]);
   });
 }
