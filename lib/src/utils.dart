@@ -16,6 +16,15 @@ Uint8List mergeAsUint8List(List<int> a, List<int> b) {
   return output.toBytes();
 }
 
+/// Safely parses the String to int
+int safeParseInt(String v, [int? base]) {
+  if (v.startsWith('00')) {
+    throw FormatException('Invalid RLP: extra zeros');
+  }
+
+  return int.parse(v, radix: base);
+}
+
 /// Encode an int into bytes
 Uint8List encodeInt(int i) {
   if (i == 0) {
